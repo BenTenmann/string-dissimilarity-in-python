@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# ----- PREAMBLE ----------------------------------------------------------------------------------------------------- #
 set -e
 
 SCRIPT_DIR="$(dirname "$0")"
@@ -7,10 +8,15 @@ PIPELINE_SPEC="${1:-${SCRIPT_DIR}/../manifest/dist.yml}"
 DATA_PATH="${2:-${SCRIPT_DIR}/../data/vdjdb.csv}"
 OUTPUT_DIR="${3:-${SCRIPT_DIR}/../output}"
 
+source "${SCRIPT_DIR}"/util.sh
+check_if_dependencies_are_present python3 Rscript yq
+
 export DATA_PATH
 export PIPELINE_SPEC
 
 mkdir -p "${OUTPUT_DIR}"
+
+# ----- SCRIPT ------------------------------------------------------------------------------------------------------- #
 for metric in Levenshtein CdrDist LongestCommonSubstring OptimalStringAlignment; do
   METRIC=$metric
   export METRIC
