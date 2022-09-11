@@ -1,0 +1,6 @@
+metric:
+  name: OptimalStringAlignment
+n_samples: 1000
+n_ann: 10
+ann: gene
+keep_ann: ["Tat", "Spike", "Gag", "pp65", "BMLF1"]
