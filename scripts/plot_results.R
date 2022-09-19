@@ -1,12 +1,29 @@
-library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(purrr)
+library(stringr)
 
 WORKING_DIR <- Sys.getenv("WORKING_DIR")
 FIGURE_DIR <- Sys.getenv("FIGURE_DIR")
 setwd(WORKING_DIR)
 
+save_figure <- function(figure, prefix) {
+  ggsave(paste(FIGURE_DIR,
+               paste(paste(prefix,
+                           format(Sys.time(), "%Y-%m-%d-%X"),
+                           sep = "-"),
+                     "png",
+                     sep = "."),
+               sep = "/"),
+         plot = figure,
+         height = 10,
+         width = 12,
+         dpi = 400)
+}
+
 list.files(
   path = "output",
-  pattern = "*.csv",
+  pattern = "^[a-z]+\\.csv$",
   full.names = TRUE,
 ) %>%
   map(~ {
@@ -23,10 +40,15 @@ list.files(
   )+
   theme(legend.position = "none")+
   theme_bw()+
-  facet_wrap(. ~ metric, scales = "free")
-ggsave(paste(FIGURE_DIR,
-             paste(format(Sys.time(), "%Y-%m-%d-%X"), "png", sep = "."),
-             sep = "/"),
-       height = 7,
-       width = 7,
-       dpi = 400)
+  facet_wrap(. ~ metric, scales = "free") -> f
+save_figure(f, "sequence-embeddings")
+
+read.csv("output/diff_metrics.csv") %>%
+  ggplot(aes(x = mds_1, y = mds_2, color = metric))+
+  geom_point(size = 5)+
+  labs(
+    x = expression(MDS[1]),
+    y = expression(MDS[2])
+  )+
+  theme_bw() -> f
+save_figure(f, "metric-differences")

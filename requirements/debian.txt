@@ -1,0 +1,7 @@
+build-essential
+libomp-dev
+dirmngr
+apt-transport-https
+ca-certificates
+gnupg2
+r-base

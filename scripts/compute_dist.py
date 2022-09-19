@@ -32,7 +32,7 @@ def get_data(
             )
         ]
         .groupby(ann)
-        .apply(lambda e: e.iloc[: int(max_samples / (len(keep_ann) or max_ann))])
+        .apply(lambda e: e.iloc[: max_samples // (len(keep_ann) or max_ann)])
         .reset_index(drop=True)
     )
 
