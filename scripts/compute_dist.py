@@ -1,16 +1,21 @@
 import os
 from pathlib import Path
+from typing import Dict, Type, TypeVar
 
 import numpy as np
 import pandas as pd
 import setriq
 import srsly
-from scipy.spatial.distance import squareform
-from sklearn.manifold import MDS
+from sklearn import (
+    manifold,
+    metrics,
+)
 
 PIPELINE_SPEC = os.environ.get("PIPELINE_SPEC")
 DATA_PATH = os.environ.get("DATA_PATH")
 OUTPUT_PATH = os.environ.get("OUTPUT_PATH", "dist.csv")
+
+Metric = TypeVar("Metric", bound=Type[setriq.modules.distances.Metric])
 
 
 def get_data(
@@ -40,8 +45,9 @@ def get_data(
 def main():
     manifest = srsly.read_yaml(PIPELINE_SPEC)
 
-    metr_spec: dict = manifest["metric"]
-    metric = getattr(setriq, metr_spec["name"])(**metr_spec.get("param", {}))
+    metr_spec: Dict[str, str] = manifest["metric"]
+    metric_type: Metric = getattr(setriq, metr_spec["name"])
+    metric = metric_type(**metr_spec.get("param", {}), return_squareform=True)
 
     df = get_data(
         DATA_PATH,
@@ -52,15 +58,21 @@ def main():
     )
 
     print(f"computing {manifest['n_samples']} distances")
-    distances = squareform(metric(df["cdr3"]))
+    distances = metric(df["cdr3"])
     np.save(str(Path(OUTPUT_PATH).parent / f"{metr_spec['name'].lower()}"), distances)
 
     print("computing the MDS")
-    embedding = MDS(dissimilarity="precomputed").fit_transform(distances)
+    embedding = manifold.TSNE(metric="precomputed", random_state=42).fit_transform(distances)
 
-    pd.DataFrame(embedding, columns=["mds_1", "mds_2"]).assign(
+    pd.DataFrame(embedding, columns=["t0", "t1"]).assign(
         epitope=df["epitope"], gene=df["gene"], species=df["species"]
     ).to_csv(OUTPUT_PATH)
+
+    print("Computing silhouette score")
+    pd.DataFrame(
+        [(metr_spec["name"], metrics.silhouette_score(distances, df["gene"], metric="precomputed"))],
+        columns=["metric", "silhouette_score"]
+    ).to_csv(Path(OUTPUT_PATH).parent / "silhouette_score.csv", mode="a", index=False, header=False)
 
 
 if __name__ == "__main__":

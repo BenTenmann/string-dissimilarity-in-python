@@ -31,24 +31,37 @@ list.files(
       mutate(metric = str_match(.x, ".*/([a-z]+)\\.csv")[,2])
   }) %>%
   bind_rows() %>%
-  ggplot(aes(x = mds_1, y = mds_2, color = gene))+
+  ggplot(aes(x = t0, y = t1, color = gene))+
   geom_point()+
   labs(
-    title = expression("CDR3"~beta~"multi-dimensional scaling"),
-    x = expression(MDS[1]),
-    y = expression(MDS[2])
+    title = expression("CDR3"~beta~italic(t)-SNE~"embeddings"),
+    x = expression(italic(t)-SNE[1]),
+    y = expression(italic(t)-SNE[2])
   )+
   theme(legend.position = "none")+
   theme_bw()+
   facet_wrap(. ~ metric, scales = "free") -> f
 save_figure(f, "sequence-embeddings")
 
-read.csv("output/diff_metrics.csv") %>%
-  ggplot(aes(x = mds_1, y = mds_2, color = metric))+
-  geom_point(size = 5)+
-  labs(
-    x = expression(MDS[1]),
-    y = expression(MDS[2])
-  )+
+read.csv("output/corr_metrics.csv") %>%
+  ggplot(aes(x = from, y = to, fill = spearman_r))+
+  geom_tile()+
+  geom_text(aes(label = round(spearman_r, 3)))+
   theme_bw() -> f
-save_figure(f, "metric-differences")
+save_figure(f, "metric-corr")
+
+read.csv(
+  "output/silhouette_score.csv",
+  header = FALSE,
+  col.names = c("metric", "score")
+) %>%
+  ggplot(aes(x = reorder(metric, -score), y = score))+
+  geom_bar(stat = "identity", fill = "steelblue")+
+  labs(
+    title = "Mean Silhouette score per distance function",
+    y = "Silhouette score",
+    x = ""
+  )+
+  coord_flip()+
+  theme_bw() -> f
+save_figure(f, "metric-score")

@@ -7,5 +7,4 @@ check_if_dependencies_are_present docker
 
 # ----- SCRIPT ------------------------------------------------------------------------------------------------------- #
 IMAGE_NAME=btenmann/"$(basename "${SCRIPT_DIR}")":latest
-docker pull "${IMAGE_NAME}"
 docker run --rm -v "${SCRIPT_DIR}":/workdir "${IMAGE_NAME}"

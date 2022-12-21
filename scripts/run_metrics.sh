@@ -20,7 +20,7 @@ OUTPUT_DIR="${3:-${APP_HOME}/output}"
 check_if_dependencies_are_present python3 Rscript yq
 PREFIX=${APP_HOME} create_required_directories output fig logs
 
-LOG_FILE="${APP_HOME}"/logs/"$(date '+%Y-%m-%d-%X'.log)"
+LOG_FILE="${APP_HOME}"/logs/"$(date '+%Y-%m-%d-%X')".log
 touch "${LOG_FILE}"
 
 export DATA_PATH
@@ -36,11 +36,11 @@ for metric in Levenshtein CdrDist LongestCommonSubstring OptimalStringAlignment;
 
   echo computing $metric...
   OUTPUT_PATH="${OUTPUT_DIR}"/"$(echo "${metric}" | tr '[:upper:]' '[:lower:]')".csv \
-    python3 "${SCRIPT_DIR}"/compute_dist.py &>> "${LOG_FILE}"
+    python3 "${SCRIPT_DIR}"/compute_dist.py >> "${LOG_FILE}" 2>&1
 done
 
 export OUTPUT_DIR
-DATA_DIR=$OUTPUT_DIR python3 "${SCRIPT_DIR}"/metric_differences.py &>> "${LOG_FILE}"
+DATA_DIR=$OUTPUT_DIR python3 "${SCRIPT_DIR}"/metric_differences.py >> "${LOG_FILE}" 2>&1
 
 FIGURE_DIR="${4:-${APP_HOME}/fig}"
 WORKING_DIR="${5:-${APP_HOME}}"
@@ -50,6 +50,6 @@ export WORKING_DIR
 application_delimiter
 echo Plotting figures 🖌
 application_delimiter
-Rscript "${SCRIPT_DIR}"/plot_results.R &>> "${LOG_FILE}"
+Rscript "${SCRIPT_DIR}"/plot_results.R >> "${LOG_FILE}" 2>&1
 
 echo Done! 🌟
